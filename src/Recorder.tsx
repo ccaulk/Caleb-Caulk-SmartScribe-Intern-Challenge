@@ -17,6 +17,9 @@ const RecordingComponent: React.FC<RecordingProps> = ({
   const progressInterval = useRef<number | null>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
 
+  //microphone permissions
+  const [microphonePermission, setMircophonePermission] = useState<boolean>(false);
+
   const handleStartRecording = () => {
     if (!mediaRecorder.current) return;
 
@@ -53,6 +56,7 @@ const RecordingComponent: React.FC<RecordingProps> = ({
       });
   };
 
+  //seeing if there is a microphone
   useEffect(() => {
     const initMediaRecorder = async () => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -70,6 +74,8 @@ const RecordingComponent: React.FC<RecordingProps> = ({
         mediaRecorder.current.ondataavailable = (event) => {
           setAudioChunks((currentChunks) => [...currentChunks, event.data]);
         };
+        //setting microphone permissions
+        setMircophonePermission(true);
       } catch (err) {
         console.error("Failed to get user media", err);
       }
@@ -115,6 +121,8 @@ const RecordingComponent: React.FC<RecordingProps> = ({
         }}
       />
       <button
+        //makes it so there must be a recording name for the button to work
+        disabled = {!recordingName}
         onClick={isRecording ? handleStopRecording : handleStartRecording}
         style={{
           width: "80%",
@@ -125,9 +133,11 @@ const RecordingComponent: React.FC<RecordingProps> = ({
           backgroundColor: "#007bff",
           color: "white",
           cursor: "pointer",
+          //displays Recording button if microphone permission is allowed
+          display: (microphonePermission ? "inline" : "none"),
         }}
       >
-        {isRecording ? "Stop Recording" : "Start Recording"}
+        {(isRecording ? "Stop Recording" : "Start Recording")}
       </button>
       <div style={{ marginBottom: "20px" }}>
         Progress Time: {progressTime} seconds
@@ -138,7 +148,11 @@ const RecordingComponent: React.FC<RecordingProps> = ({
             onClick={() => {
               const link = document.createElement("a");
               link.href = audioUrl;
-              link.download = `file.webm`;
+              //sets the name of the downloaded file to the recording name
+              link.setAttribute(
+                'download',
+                recordingName + `.webm`,
+              );
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
