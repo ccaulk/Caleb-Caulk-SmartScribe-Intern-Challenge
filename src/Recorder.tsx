@@ -6,7 +6,7 @@ interface RecordingProps {
 }
 
 const RecordingComponent: React.FC<RecordingProps> = ({
-  onDownloadRecording,
+  onDownloadRecording
 }) => {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordingName, setRecordingName] = useState<string>("");
@@ -35,7 +35,9 @@ const RecordingComponent: React.FC<RecordingProps> = ({
 
     mediaRecorder.current.stop();
     setIsRecording(false);
-    progressInterval.current = null;
+    //fixing the timer
+    //need to clear the progress interval so it can be reset
+    clearInterval(progressInterval.current)
     setProgressTime(0);
   };
 
