@@ -20,6 +20,14 @@ const RecordingComponent: React.FC<RecordingProps> = ({
   //microphone permissions
   const [microphonePermission, setMircophonePermission] = useState<boolean>(false);
 
+  //upload blob
+  const [uploadAudio, setUploadAudio] = useState<Blob>();
+
+  //variable to determine when to display the uploaded message
+  const [uploadDisplay, setUploadDisplay] = useState<boolean>(true);
+  //the uploaded message
+  const[uploadMessage, setUploadMessage] = useState<string>("");
+
   const handleStartRecording = () => {
     if (!mediaRecorder.current) return;
 
@@ -44,14 +52,35 @@ const RecordingComponent: React.FC<RecordingProps> = ({
     setProgressTime(0);
   };
 
+//handlers for the uploda
+const handleOnChangeUploadInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //some error handling
+  if (!event.target.files) return;
+  setUploadAudio(event.target.files[0]);
+}
+//calls the "upload" function
+const handleUploadSubmit = () =>{
+  if(!uploadAudio) return;
+  console.log(uploadAudio);
+  handleUpload(uploadAudio);
+  //first set the uploaded message to Uploading the change it
+  setUploadDisplay(true);
+  setUploadMessage("Uploading");
+}
+
   const handleUpload = (audioBlob: Blob) => {
     UploadManager.upload(audioBlob)
       .then((response) => {
         console.log(
           `Upload successful. Transcript: ${response.transcript}, Size: ${response.size} bytes`
         );
+        //success
+        setUploadMessage(response.transcript +"\n Size: " + response.size + " bytes");
+        console.log(uploadDisplay);
       })
       .catch((error) => {
+        //failure
+        setUploadMessage(error.message);
         console.error("Upload failed:", error.message);
       });
   };
@@ -173,6 +202,37 @@ const RecordingComponent: React.FC<RecordingProps> = ({
           </button>
         </div>
       )}
+      <div>
+        {/* this is the upload html code with the handle functions 
+        and correct display when upload is clicked*/}
+        <h5>Upload an audio recording</h5>
+        <input
+          type="file"
+          name = "uploadInput"
+          onChange = {handleOnChangeUploadInput}
+          style = {{ 
+            width: "80%",
+            padding: "10px",
+            marginBottom: "20px",
+            borderRadius: "5px",
+            border: "none",
+            cursor: "pointer"
+        }}
+        />
+        <button onClick={handleUploadSubmit}
+          style = {{ 
+            width: "80%",
+            padding: "10px",
+            marginBottom: "20px",
+            borderRadius: "5px",
+            border: "none",
+            backgroundColor: "#800080",
+            color: "white",
+            cursor: "pointer"
+        }}>Upload</button>
+      </div>
+      <p style = {{display: (uploadDisplay ? "inline" : "none")}}
+      >{uploadMessage}</p>
     </div>
   );
 };
